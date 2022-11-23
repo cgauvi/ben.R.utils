@@ -141,7 +141,7 @@ append_new_records.sf <- function(df,
                                   db_name,
                                   tbl_name,
                                   key ){
-
+browser()
   # Make sure table really exists
   existing_tables <- RSQLite::dbListTables(conn)
   assertthat::assert_that(length(existing_tables) > 0 ,
@@ -189,11 +189,11 @@ append_new_records.sf <- function(df,
   df_to_add <- RSQLite::dbGetQuery(conn, sql_anti_join_clause)
   new_records <- nrow(df_to_add)
 
-  shp_append <- df %<>% dplyr::inner_join(df_to_add, on= key_for_merge)
+  shp_append <- df %>% dplyr::inner_join(df_to_add, on= key_for_merge)
 
   if(new_records > 0){
     print(glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
-    sf::st_write(obj=shp_append,
+    sf::st_write(obj=shp_append %>% select(colnames(df)),
                  dsn=db_name,
                  layer=tbl_name,
                  append=T,
