@@ -3,6 +3,27 @@ library(RSQLite)
 library(glue)
 
 
+#' Add a table to a SQLite db (or append if it exists)
+#'
+#' @param tbl_name
+#' @param df data.frame or sf
+#' @param key unique ID to use to identify duplicates if appending to existing table: defaults to ALL columns
+#' @param db_name
+#' @param overwrite
+#'
+#' @importFrom glue glue
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'  write_table  (df = iris,
+#' tbl_name = 'iris_test_tbl',
+#' key = NULL,
+#' db_name = here::here('inst','extdata', 'iris_test.db'),
+#' overwrite= T)
+#' }
 write_table <- function (df, ...) {
   UseMethod("write_table", df)
 }
@@ -57,20 +78,7 @@ write_table.sf <- function(df,
 
 }
 
-#' Add a table to a SQLite db (or append if it exists)
-#'
-#' @param tbl_name
-#' @param df
-#' @param key unique ID to use to identify duplicates if appending to existing table: defaults to ALL columns
-#' @param db_name
-#' @param overwrite
-#'
-#' @importFrom glue glue
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 write_table.data.frame <- function(df,
                                 tbl_name,
                                 db_name,
@@ -130,6 +138,29 @@ list_tables_db <- function(conn){
   return(existing_tables)
 }
 
+
+#' Append new records to an existing table in a sql lite db
+#'
+#' @param conn
+#' @param tbl_name
+#' @param df data.frame or sf
+#' @param key unique ID to use to identify duplicates if appending to existing table: defaults to ALL columns
+#'
+#' @return number of records added
+#'
+#' @examples
+#' \dontrun{
+#' shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
+#' conn <- dbConnect(RSQLite::SQLite(), dbname  = here::here('inst','extdata', 'nc_test.db'))
+#' shp_nc_rnd <- shp_nc %>% mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100))) # random values so these are new records
+#' append_new_records(shp_nc_rnd %>% head(10),
+#'                   conn,
+#'                   db_name =  here::here('inst','extdata', 'nc_test.db') ,
+#'                   tbl_name = 'nc_tbl',
+#'                   key=NULL) # use all columns + ignore geometry
+#'
+#' }
+#'
 append_new_records <- function(x,...){
   UseMethod('append_new_records',x)
 }
@@ -141,7 +172,7 @@ append_new_records.sf <- function(df,
                                   db_name,
                                   tbl_name,
                                   key ){
-browser()
+
   # Make sure table really exists
   existing_tables <- RSQLite::dbListTables(conn)
   assertthat::assert_that(length(existing_tables) > 0 ,
@@ -216,16 +247,7 @@ browser()
 
 
 
-#' Append new records to an existing table in a sql lite db
-#'
-#' @param conn
-#' @param tbl_name
-#' @param df
-#' @param key unique ID to use to identify duplicates if appending to existing table: defaults to ALL columns
-#'
-#' @return number of records added
-#'
-#' @examples
+
 append_new_records.data.frame <- function(df,
                                           conn,
                                           db_name,
@@ -293,20 +315,20 @@ append_new_records.data.frame <- function(df,
 
 
 
-
-get_df_tbl <- function(x,...){
-  UseMethod('get_df_tbl_dispatch',x)
-}
-
 #' Return a df from a sql lite connection that can be queried lazily with dplyr
 #'
+#' @param db_name or RSQLite::SQLiteConnection object
 #' @param tbl_name
-#' @param db_name
 #'
 #' @return
 #' @export
 #'
 #' @examples
+get_df_tbl <- function(x,...){
+  UseMethod('get_df_tbl_dispatch',x)
+}
+
+
 get_df_tbl_dispatch.character <- function(db_name = here::here('inst','extdata', 'revue_technique.db'),
                                           tbl_name= 'policies_2015-2019'){
 

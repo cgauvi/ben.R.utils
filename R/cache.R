@@ -93,7 +93,7 @@ cache_wrapper <- function(name_str,
 #'
 #' @return
 #' @importFrom  glue glue
-#' @export
+#' @noRd
 #'
 #' @examples
 cache_ <- function(df,
