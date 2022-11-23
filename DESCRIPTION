@@ -1,0 +1,25 @@
+Package: ben.R.utils
+Type: Package
+Title: R utility functions that are meant to be reused
+Version: 0.1.0
+Author: Charles Gauvin 
+Maintainer: Charles Gauvin <charles.gauvin@lacapitale.com>
+Description: Create SQLite DBs, cache files, 
+    perform other boilerplate operations. 
+License: Proprietary
+Encoding: UTF-8
+LazyData: true
+Imports:
+    dplyr,
+    RSQLite,
+    arrow,
+    here,
+    tools,
+    magrittr,
+    glue,
+    purrr
+Suggests: 
+    sf,
+    readr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

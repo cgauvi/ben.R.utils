@@ -1,0 +1,61 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+
+cache/**
+# project-local contains your personal configuration choices and state
+/anaconda-project-local.yml
+
+# Files autocreated by Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Notebook stuff
+/.ipynb_checkpoints
+
+# JupyterLab stuff
+.Trash-*/
+
+# Spyder stuff
+/.spyderproject
+
+/envs/
+/services/
+
+# These lines were added by AE5 so that your project will
+# ignore the convenience symbolic links it has placed. If
+# you replace those links with non-empty directories, the
+# "!" lines will ensure those directories are not ignored.
+**/data
+!/data/
+/user
+!/user/
+
+# For pytest
+test-reports/
+
+# Misc test queries
+queries/
+
+# Garbagge
+archive/
+
+# Logs
+logs/
+
+
+# Output
+/output/
+.Rproj.user
+
+# Renv
+ **/renv/
+ /renv/**
+renv/
+
+# Rhistory
+.Rhistory
