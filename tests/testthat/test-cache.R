@@ -44,10 +44,10 @@ test_that("Caching csv object works", {
   )
 
   # Cached
-  assertthat::assert_that(file.exists(here::here('cache','aliments.csv')))
+  assertthat::assert_that(file.exists(here::here("cache","aliments.csv")))
 
   # Same
-  df_aliments_cached <- readr::read_csv(here::here('cache','aliments.csv'))
+  df_aliments_cached <- readr::read_csv(here::here("cache","aliments.csv"))
 
   assertthat::assert_that(all(dim(df_aliments) == dim(df_aliments_cached)))
   assertthat::assert_that(all(colnames(df_aliments) == colnames(df_aliments_cached)))
