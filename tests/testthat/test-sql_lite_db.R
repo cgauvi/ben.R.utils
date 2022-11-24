@@ -5,6 +5,11 @@ library(dplyr)
 library(here)
 
 
+# For debugging:
+# dbListTables(RSQLite::dbConnect(RSQLite::SQLite(), dbname  = here::here('inst','extdata', 'nc_test.db') ))
+# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'bla')
+# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'blo')
+
 test_that("DB creation works for df", {
 
   # Create the cache dir
@@ -70,39 +75,6 @@ test_that("Appending existing records works (no duplicates) with df",{
 })
 
 
-#
-# sf::st_write(obj=shp_nc ,
-#              dsn=here::here('inst','extdata', 'nc_test.db'),
-#              layer='bla',
-#              append=T,
-#              delete_dsn  = T,
-#              driver = 'SQLite')
-#
-# sf::st_write(obj=shp_nc %>% head(2) ,
-#              dsn=here::here('inst','extdata', 'nc_test.db'),
-#              layer='bla',
-#              append=T,
-#              delete_dsn  = F,
-#              layer_options = "APPEND_SUBDATASET=YES",
-#              driver = 'SQLite')
-#
-# sf::st_write(obj=shp_nc %>% head(2) ,
-#              dsn=here::here('inst','extdata', 'nc_test.db'),
-#              layer='blo',
-#              append=T,
-#              delete_dsn  = F,
-#              #layer_options = "APPEND_SUBDATASET=YES",
-#              driver = 'SQLite')
-#
-#
-# write_table.data.frame(iris %>% tail(2),
-#                        db_name = here::here('inst','extdata', 'nc_test.db'),
-#                        tbl_name = 'iris_test_tbl',
-#                        key=NULL)
-#
-# dbListTables(RSQLite::dbConnect(RSQLite::SQLite(), dbname  = here::here('inst','extdata', 'nc_test.db') ))
-# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'bla')
-# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'blo')
 
 
 test_that( "DB creation works for sf objects", {
