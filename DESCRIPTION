@@ -22,7 +22,7 @@ Imports:
     sf,
     readr
 Suggests: 
-    lintr
+    lintr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.2.2
