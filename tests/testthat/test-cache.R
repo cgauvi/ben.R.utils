@@ -1,7 +1,7 @@
 test_that("Caching sf object works", {
 
-  read_geojson <- function(){
-    sf::st_read("https://data.montreal.ca/dataset/9f3911af-3a5f-4c4b-89c7-239ba487b1f1/resource/19ce5356-2ba6-4702-ad6c-c84e13698693/download/secteurs_deneigement_saison_2021-2022.geojson")
+  read_geojson <- function() {
+    sf::st_read("https://data.montreal.ca/dataset/9f3911af-3a5f-4c4b-89c7-239ba487b1f1/resource/19ce5356-2ba6-4702-ad6c-c84e13698693/download/secteurs_deneigement_saison_2021-2022.geojson") #nolint
 
   }
 
@@ -63,7 +63,7 @@ test_that("Caching parquet object works", {
   if(!dir.exists( here::here('cache'))) dir.create( here::here('cache'))
 
   read_csv <- function(){
-    readr::read_csv("https://data.montreal.ca/dataset/fa01965a-6db5-42f9-b889-d39769b046eb/resource/0e09829f-3e24-4fb3-94cf-0e8b727de22b/download/inspection-aliments-bilan.csv")
+    readr::read_csv("https://data.montreal.ca/dataset/fa01965a-6db5-42f9-b889-d39769b046eb/resource/0e09829f-3e24-4fb3-94cf-0e8b727de22b/download/inspection-aliments-bilan.csv") #nolint
   }
 
   # Read in once
