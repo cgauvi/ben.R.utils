@@ -20,7 +20,8 @@ Imports:
     purrr,
     dbplyr,
     sf,
-    readr
+    readr,
+    assertthat
 Suggests: 
     lintr,
     testthat (>= 3.0.0)
