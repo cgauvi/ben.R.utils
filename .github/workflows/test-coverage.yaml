@@ -64,8 +64,6 @@ jobs:
           install.packages('renv')
           # CRAN packages
           remotes::install_deps(dependencies = TRUE)
-          # Special catboost
-          devtools::install_github('catboost/catboost@v1.0.6', subdir = 'catboost/R-package')
         env:
           GITHUB_PAT: ${{ secrets.GH_PAT }}
         shell: Rscript {0}
