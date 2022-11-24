@@ -33,6 +33,16 @@ jobs:
           use-public-rspm: true
           r-version: ${{ matrix.config.r }}
 
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          extra-packages: |
+            any::ggplot2
+            any::rcmdcheck
+            any::sf
+          needs: |
+            website
+            coverage
 
       - name: Query dependencies
         run: |
