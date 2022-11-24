@@ -43,6 +43,9 @@ write_table <- function (df, ...) {
 #' @export write_table.sf
 #' @export
 #'
+#' @import RSQLite
+#' @importFrom  DBI dbDisconnect
+#'
 #' @examples
 write_table.sf <- function(df,
                            tbl_name,
@@ -87,7 +90,7 @@ write_table.sf <- function(df,
   }
 
   # Disconnnect
-  dbDisconnect(conn)
+  DBI::dbDisconnect(conn)
 
   return(results)
 
@@ -142,7 +145,7 @@ write_table.data.frame <- function(df,
   }
 
   # Disconnnect
-  dbDisconnect(conn)
+  DBI::dbDisconnect(conn)
 
   return(results)
 }
@@ -261,10 +264,10 @@ append_new_records.sf <- function(df,
   }
 
   # Drop tmp table
-  dbExecute(conn, 'DROP TABLE  if exists tmp')
+  RSQLite::dbExecute(conn, 'DROP TABLE  if exists tmp')
 
   # Disconnnect
-  dbDisconnect(conn)
+  DBI::dbDisconnect(conn)
 
 
   return(new_records)
@@ -329,10 +332,10 @@ append_new_records.data.frame <- function(df,
   }
 
   # Drop tmp table
-  dbExecute(conn, 'DROP TABLE  if exists tmp')
+  RSQLite::dbExecute(conn, 'DROP TABLE  if exists tmp')
 
   # Disconnnect
-  dbDisconnect(conn)
+  DBI::dbDisconnect(conn)
 
 
   return(new_records)
