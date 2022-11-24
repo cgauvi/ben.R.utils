@@ -32,8 +32,9 @@ cache_wrapper <- function(name_str,
                           ...) {
 
   # QA
+  # nolint start
   assertthat::assert_that(use_parquet + is_spatial < 2,
-                          msg = 'Fatal error! cannot use both parquet and sf or sp dataset')
+                          msg = "Fatal error! cannot use both parquet and sf or sp dataset")
 
   assertthat::assert_that(!is.null(name_str) & !is.na(name_str) & nchar(name_str) > 0,
                           msg = "Fatal error! no file name provided for cache!"
@@ -42,36 +43,37 @@ cache_wrapper <- function(name_str,
   assertthat::assert_that(dir.exists(path_cache_dir),
                           msg = "Fatal error! Cache directory does not exist")
 
+  # nolint end
 
   # Try parquet + fallback on original format
-  if(use_parquet){
+  if (use_parquet) {
       df <- cache_(df,
                    name_str,
                    path_cache_dir,
-                   read_fun=arrow::read_parquet,
-                   write_fun=arrow::write_parquet,
-                   new_extension='parquet',
-                   fun=fun,
+                   read_fun = arrow::read_parquet,
+                   write_fun = arrow::write_parquet,
+                   new_extension = "parquet",
+                   fun = fun,
                    ...)
 
-  }else if (is_spatial) {
+  } else if (is_spatial) {
     df <- cache_(df,
-                 name_str=name_str,
-                 path_cache_dir=path_cache_dir,
-                 read_fun=sf::st_read,
-                 write_fun=sf::st_write,
-                 new_extension='geojson',
-                 fun=fun,
+                 name_str = name_str,
+                 path_cache_dir = path_cache_dir,
+                 read_fun = sf::st_read,
+                 write_fun = sf::st_write,
+                 new_extension = "geojson",
+                 fun = fun,
                  ...)
-  }else{
+  } else {
     # Try the default format
     df <- cache_(df,
                  name_str,
                  path_cache_dir,
-                 read_fun=readr::read_csv,
-                 write_fun=readr::write_csv,
-                 new_extension='csv',
-                 fun=fun,
+                 read_fun = readr::read_csv,
+                 write_fun = readr::write_csv,
+                 new_extension = "csv",
+                 fun = fun,
                  ...)
   }
 
@@ -108,24 +110,27 @@ cache_ <- function(df,
 
   # Remove extension if present
   name_str_no_ext <- tools::file_path_sans_ext(name_str)
-  if(!is.null(new_extension)) name_str_new <- glue('{name_str_no_ext}.{new_extension}')
-  else  name_str_new <- name_str
+  if (!is.null(new_extension)){
+    name_str_new <- glue::glue("{name_str_no_ext}.{new_extension}")
+  } else  name_str_new <- name_str
 
   # Create the path
   path <- file.path(path_cache_dir,name_str_new)
 
   # Get the data if not already cached
   if (!file.exists(path)) {
-    print(glue("{path} does not exist yet - running {as.character(substitute(fun))} ..."))
+    print(
+      glue::glue("{path} does not exist yet - running {as.character(substitute(fun))} ...") #nolint
+    )
 
     df <- fun(...)
 
     write_fun(df, path)
-    print(glue("Saving results: \n{path}..."))
+    print(glue::glue("Saving results: \n{path}..."))
 
 
   } else {
-    print(glue("Reading existing {path} ..."))
+    print(glue::glue("Reading existing {path} ..."))
 
     # read
     df <- read_fun(path)

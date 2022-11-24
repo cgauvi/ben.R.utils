@@ -33,7 +33,7 @@ write_table.sf <- function(df,
                            tbl_name,
                            db_name,
                            key = NULL,
-                           overwrite= F){
+                           overwrite = F) {
 
 
   if(is.null(key)) key <- sf::st_drop_geometry(df) %>% colnames() # don't use the geometry
@@ -46,17 +46,17 @@ write_table.sf <- function(df,
 
 
   # DB exists, table does not or we require overwriting
-  if(!(tbl_name %in% existing_tables) | overwrite) {
+  if(!(tbl_name %in% existing_tables) || overwrite) {
     if(overwrite) {
-      print(glue('Table {tbl_name} exists but forcing overwrite'))
-      RSQLite::dbExecute(conn, glue('DROP TABLE  if exists  {tbl_name} '))
+      print(glue("Table {tbl_name} exists but forcing overwrite"))
+      RSQLite::dbExecute(conn, glue("DROP TABLE  if exists  {tbl_name}"))
     }
-    else print(glue('Table {tbl_name} does not exist -> creating it'))
+    else { print(glue("Table {tbl_name} does not exist -> creating it")) }
 
     # Write to DB
-    results <-  sf::st_write(obj=df,
-                             dsn=db_name,
-                             layer=tbl_name,
+    results <-  sf::st_write(obj = df,
+                             dsn = db_name,
+                             layer = tbl_name,
                              delete_dsn  = T,   # important to delete the entire thing avoid any fuck-up
                              driver = 'SQLite')
 
@@ -80,10 +80,10 @@ write_table.sf <- function(df,
 
 
 write_table.data.frame <- function(df,
-                                tbl_name,
-                                db_name,
-                                key = NULL,
-                                overwrite= F){
+                                   tbl_name,
+                                   db_name,
+                                   key = NULL,
+                                   overwrite = F){
 
   # Connect to DB
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_name)
@@ -93,12 +93,12 @@ write_table.data.frame <- function(df,
 
 
   # DB exists, table does not or we require overwriting
-  if(!(tbl_name %in% existing_tables) | overwrite) {
+  if(!(tbl_name %in% existing_tables) || overwrite) {
     if(overwrite) {
-      print(glue('Table {tbl_name} exists but forcing overwrite'))
-      RSQLite::dbExecute(conn, glue('DROP TABLE  if exists  {tbl_name} '))
+      print(glue("Table {tbl_name} exists but forcing overwrite"))
+      RSQLite::dbExecute(conn, glue("DROP TABLE  if exists  {tbl_name}"))
     }
-    else print(glue('Table {tbl_name} does not exist -> creating it'))
+    else print(glue("Table {tbl_name} does not exist -> creating it"))
 
     # Write to DB
     results <-  RSQLite::dbWriteTable(conn=conn,name=tbl_name, value=df)
@@ -117,8 +117,6 @@ write_table.data.frame <- function(df,
   # Disconnnect
   dbDisconnect(conn)
 
-
-
   return(results)
 }
 
@@ -130,7 +128,7 @@ list_tables_db <- function(conn){
   tryCatch({
     existing_tables <- RSQLite::dbListTables(conn)
   },error=function(e){
-    print(glue('Db {db_name} does not exist -> creating it along with table'))
+    print(glue("Db {db_name} does not exist -> creating it along with table"))
     existing_tables <- list()
     return(existing_tables)
   })
@@ -162,7 +160,7 @@ list_tables_db <- function(conn){
 #' }
 #'
 append_new_records <- function(x,...){
-  UseMethod('append_new_records',x)
+  UseMethod("append_new_records",x)
 }
 
 
@@ -183,11 +181,11 @@ append_new_records.sf <- function(df,
   # Check for existing records and try to avoid deduping
 
   ## Create Tmp table with new results -- use basic dataframe -- fucking sf and sqlite driver is impossibly complicated
-  RSQLite::dbExecute(conn, 'DROP TABLE  if exists tmp')
-  RSQLite::dbWriteTable(conn,'tmp',df %>% sf::st_drop_geometry())
+  RSQLite::dbExecute(conn, "DROP TABLE  if exists tmp")
+  RSQLite::dbWriteTable(conn, 'tmp', df %>% sf::st_drop_geometry())
 
   ## Create the key to use for merging and checking dups
-  if(is.null(key))  key <- colnames(df) # use all columns by default if nt specified
+  if(is.null(key))  key <- colnames(df) # use all columns by default if not specified
   if(any('geometry' %in% tolower(key))) {
     warning('Warning! geometry column used as a key to check for duplicates in sf object: dropping')
     key <- key[tolower(key) != 'geometry']
@@ -195,11 +193,11 @@ append_new_records.sf <- function(df,
 
   key_for_merge <- key
   key <- paste0( '"', key,  '"') # quote the columns
-  key_str <- paste0(key, collapse = ',')
-  right <- paste0(  't_right.',  key )
+  key_str <- paste0(key, collapse = ",")
+  right <- paste0(  "t_right.",  key )
   sql_is_null_clause <- paste0(
-    paste0(  right , ' IS NULL') ,
-    collapse = ' AND '
+    paste0(  right , " IS NULL") ,
+    collapse = " AND "
   )
 
   left <-  paste0(  't_left.',  key )
