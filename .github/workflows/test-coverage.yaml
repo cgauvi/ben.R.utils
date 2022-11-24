@@ -70,7 +70,7 @@ jobs:
 
       - name: Test coverage
         run: |
-          install.packages('covr')
+          install.packages(c('covr','htmltools','DT'))
           x <- covr::package_coverage(quiet = FALSE, verbose = TRUE)
           if (length(x)) {
             warning("Tests code coverage percentage is : ", covr::percent_coverage(x))

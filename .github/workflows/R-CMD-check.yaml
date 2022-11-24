@@ -5,7 +5,7 @@ on:
     branches: [main, master]
 
 
-name: bechmarking_test
+name: R-CMD-check
 
 jobs:
   R-CMD-check:
@@ -70,6 +70,8 @@ jobs:
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_: false
-        run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--no-multiarch"), error_on = "error", check_dir = "check")
+        run: |
+          install.packages("rcmdcheck")
+          rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--no-multiarch"), error_on = "error", check_dir = "check")
         shell: Rscript {0}
 
