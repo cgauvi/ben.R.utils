@@ -187,8 +187,8 @@ append_new_records.sf <- function(df,
   ## Create the key to use for merging and checking dups
   if(is.null(key))  key <- colnames(df) # use all columns by default if not specified
   if(any('geometry' %in% tolower(key))) {
-    warning('Warning! geometry column used as a key to check for duplicates in sf object: dropping')
-    key <- key[tolower(key) != 'geometry']
+    warning("Warning! geometry column used as a key to check for duplicates in sf object: dropping")
+    key <- key[tolower(key) != "geometry"]
   }
 
   key_for_merge <- key
