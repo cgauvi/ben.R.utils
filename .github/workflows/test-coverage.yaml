@@ -1,50 +1,82 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
+    branches: [master, main]
+    paths:
+    - 'tests/**'
   pull_request:
-    branches: [main, master]
+    branches: [master, main]
+    paths-ignore:
+    - '.github/**'
+  repository_dispatch:
+    types: [covr_trigger]
 
 name: test-coverage
 
 jobs:
   test-coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+      GITHUB_PAT: ${{ secrets.GH_PAT }}
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_RENV_CACHE_DIR: "~/.local/share/renv"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Query dependencies
+        run: |
+          install.packages('remotes')
+          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
+          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
+        shell: Rscript {0}
+
+      - name: Cache R packages
+        uses: actions/cache@v2
         with:
-          extra-packages: any::covr
-          needs: coverage
+          path: |
+            ${{ env.R_LIBS_USER }}
+            ${{ env.R_RENV_CACHE_DIR }}
+          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
+
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        env:
+          RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
+        run: |
+          Rscript -e "remotes::install_github('meztez/sysreqs')"
+          sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION', remotes = TRUE, pkgs = 'covr'))")
+          sudo -s eval "$sysreqs"
+
+      - name: Install dependencies
+        run: |
+          if (file.exists("renv.lock")) {
+            if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+            renv::restore()
+          } else {
+            remotes::install_deps(dependencies = TRUE)
+          }
+          remotes::install_cran("covr", dependencies = TRUE)
+        shell: Rscript {0}
 
       - name: Test coverage
         run: |
-          covr::codecov(
-            quiet = FALSE,
-            clean = FALSE,
-            install_path = file.path(Sys.getenv("RUNNER_TEMP"), "package")
-          )
+          x <- covr::package_coverage(quiet = FALSE, verbose = TRUE)
+          if (length(x)) {
+            warning("Tests code coverage percentage is : ", covr::percent_coverage(x))
+            covr::report(x, file = "covr-report.html")
+          } else {
+            writeLines("No functions", con = "covr-report.html")
+          }
         shell: Rscript {0}
 
-      - name: Show testthat output
-        if: always()
-        run: |
-          ## --------------------------------------------------------------------
-          find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec cat '{}' \; || true
-        shell: bash
-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@v3
+      - name: Upload check results
+        uses: actions/upload-artifact@v2
         with:
-          name: coverage-test-failures
-          path: ${{ runner.temp }}/package
+          name: covr-report
+          path: covr-report.html
