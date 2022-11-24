@@ -1,5 +1,9 @@
 library(testthat)
 library(magrittr)
+library(RSQLite)
+library(dplyr)
+library(here)
+
 
 test_that("DB creation works for df", {
 
@@ -17,9 +21,9 @@ test_that("DB creation works for df", {
 
 test_that("Appending existing records works (no duplicates) with df",{
 
-  conn <- dbConnect(RSQLite::SQLite(),
-                    dbname  = here::here('inst','extdata', 'iris_test.db')
-                    )
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
+                             dbname  = here::here('inst','extdata', 'iris_test.db')
+                             )
 
   n_before <- get_df_tbl(here::here('inst','extdata', 'iris_test.db'), 'iris_test_tbl') %>% dplyr::count()  %>% dplyr::pull(n)
 
@@ -63,11 +67,11 @@ test_that("Appending existing records works (no duplicates) with sf",{
 
   shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
 
-  conn <- dbConnect(RSQLite::SQLite(),
-                    dbname  = here::here('inst','extdata', 'nc_test.db')
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
+                             dbname  = here::here('inst','extdata', 'nc_test.db')
   )
 
-  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()
+  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>% dplyr::pull(n)
 
   append_new_records(shp_nc %>% tail(2),
                      conn,
@@ -75,7 +79,7 @@ test_that("Appending existing records works (no duplicates) with sf",{
                      tbl_name = 'nc_tbl',
                      key=NULL) # use all columns + ignore geometry
 
-  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()
+  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>% dplyr::pull(n)
 
   assertthat::are_equal(n_before, n_after)
 
@@ -87,19 +91,17 @@ test_that("Appending existing records works (no duplicates) with sf",{
 
 test_that("Appending new records with sf",{
 
-  library(dplyr)
-
   shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
 
-  conn <- dbConnect(RSQLite::SQLite(),
-                    dbname  = here::here('inst','extdata', 'nc_test.db')
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
+                             dbname  = here::here('inst','extdata', 'nc_test.db')
   )
 
-  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()
+  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>%  dplyr::pull(n)
 
   # Random values to numerical columns
   shp_nc_rnd <- shp_nc %>%
-    mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100)))
+    dplyr::mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100)))
 
   num_new <- 10
 
@@ -109,7 +111,7 @@ test_that("Appending new records with sf",{
                      tbl_name = 'nc_tbl',
                      key=NULL) # use all columns + ignore geometry
 
-  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()
+  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
 
   assertthat::are_equal(n_before+num_new, n_after)
 
