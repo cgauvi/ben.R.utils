@@ -1,6 +1,6 @@
 Package: ben.R.utils
 Type: Package
-Title: R utility functions that are meant to be reused
+Title: R Utility Functions that are Meant to be Reused
 Version: 0.1.0
 Author: Charles Gauvin 
 Maintainer: Charles Gauvin <charles.gauvin@lacapitale.com>
