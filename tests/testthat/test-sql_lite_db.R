@@ -162,31 +162,43 @@ test_that("Appending new records with sf",{
 
 
 
-test_that("Adding new sf table with - existing db",{
+test_that("Adding new sf table to existing db",{
+
+  # Remove DB
+  if(file.exists(here::here('inst','extdata', 'nc_test.db'))) unlink(here::here('inst','extdata', 'nc_test.db') )
 
   shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
 
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
-                             dbname  = here::here('inst','extdata', 'nc_test.db')
-  )
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+
+  # Write table to new DB
+  write_table  (df = shp_nc,
+                tbl_name = 'nc_tbl',
+                key = 'ogc_fid',
+                db_name = here::here('inst','extdata', 'nc_test.db'),
+                overwrite = T)
 
   n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>%  dplyr::pull(n)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_before <- RSQLite::dbListTables(conn)
 
-  # Random values to numerical columns
-  shp_nc_rnd <- shp_nc %>%
-    dplyr::mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100)))
-
-  num_new <- 10
-
-  write_table(shp_nc_rnd %>% head(num_new),
+  # Write another table to existing DB
+  write_table(shp_nc,
               tbl_name = 'nc_tbl_2',
               key = 'ogc_fid',
               db_name = here::here('inst','extdata', 'nc_test.db'),
-              overwrite= F)
+              overwrite= T)
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_after <- RSQLite::dbListTables(conn)
 
-  expect_equal(n_before+num_new, n_after)
+  # Compare tables
+  expect_false(any('nc_tbl_2'  %in% tables_before))
+  expect_true(any('nc_tbl_2'  %in% tables_after))
+
+  # Make sure the existing original table stayed the same
+  expect_equal(n_before, n_after)
 
   RSQLite::dbDisconnect(conn)
 
@@ -196,16 +208,42 @@ test_that("Adding new sf table with - existing db",{
 
 test_that("Add new data.frame to existing db",{
 
-  n_before <- nrow(iris)
 
+  # Remove DB
+  if(file.exists(here::here('inst','extdata', 'nc_test.db'))) unlink(here::here('inst','extdata', 'nc_test.db') )
+
+  shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+
+  # Write table to new DB
+  write_table  (df = shp_nc,
+                tbl_name = 'nc_tbl',
+                key = 'ogc_fid',
+                db_name = here::here('inst','extdata', 'nc_test.db'),
+                overwrite = T)
+
+  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>%  dplyr::pull(n)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_before <- RSQLite::dbListTables(conn)
+
+  # Write another table (non spatial) to existing DB
   write_table(iris,
               tbl_name = 'iris',
               db_name = here::here('inst','extdata', 'nc_test.db'),
               overwrite= T)
 
-  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'iris') %>% dplyr::count()  %>%  dplyr::pull(n)
+  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_after <- RSQLite::dbListTables(conn)
 
-  expect_equal(n_before, n_after)
+  # Compare tables
+  expect_false(any('iris'  %in% tables_before))
+  expect_true(any('iris'  %in% tables_after))
+
+
+
+  RSQLite::dbDisconnect(conn)
 
 
 
