@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, r: 'release', renv: '~\AppData\Local\renv'}
           - {os: ubuntu-22.04, r: 'release', renv: '~/.local/share/renv'}
 
     env:
@@ -37,16 +36,14 @@ jobs:
 
       - name: Query dependencies
         run: |
+          Sys.setenv("RENV_PATHS_LOCKFILE") =
           if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+          renv::activate()
           if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
 
-      - name: Fix path for Windows caching
-        if: runner.os == 'Windows'
-        shell: bash
-        run: echo "C:/windows/System32" >> $GITHUB_PATH
 
       - name: Cache R packages
         uses: actions/cache@v2

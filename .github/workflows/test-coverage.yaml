@@ -26,6 +26,7 @@ jobs:
       - name: Query dependencies
         run: |
           if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+          renv::activate()
           install.packages('remotes')
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
