@@ -1,19 +1,14 @@
 on:
   push:
-    branches: [main, master, charles/linter]
-    paths:
-    - inst/extdata/ci_cd/**
-    - src/modeling/**
+    branches: [main, master]
   pull_request:
-    branches: [main, master, charles/linter]
-    paths:
-    - inst/extdata/ci_cd/**
-    - src/modeling/**
+    branches: [main, master]
+
 
 name: bechmarking_test
 
 jobs:
-  bechmarking_test:
+  R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})

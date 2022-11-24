@@ -11,6 +11,7 @@ jobs:
   test-coverage:
     runs-on: ${{ matrix.config.os }}
 
+
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
     strategy:
@@ -32,6 +33,7 @@ jobs:
         with:
           use-public-rspm: true
           r-version: ${{ matrix.config.r }}
+
 
       - name: Query dependencies
         run: |
@@ -57,12 +59,15 @@ jobs:
       - name: Pandoc setup
         uses: r-lib/actions/setup-pandoc@v2
 
-
       - name: Install dependencies
         run: |
-              install.packages('renv')
-              # CRAN packages
-              remotes::install_deps(dependencies = TRUE)
+          install.packages('renv')
+          # CRAN packages
+          remotes::install_deps(dependencies = TRUE)
+          # Special catboost
+          devtools::install_github('catboost/catboost@v1.0.6', subdir = 'catboost/R-package')
+        env:
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
         shell: Rscript {0}
 
       - name: Test coverage
