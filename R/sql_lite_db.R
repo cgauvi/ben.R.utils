@@ -1,7 +1,9 @@
-library(DBI)
+
 library(RSQLite)
 library(glue)
-
+library(dplyr)
+library(assertthat)
+library(sf)
 
 #' Add a table to a SQLite db (or append if it exists)
 #'
@@ -48,10 +50,10 @@ write_table.sf <- function(df,
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
     if(overwrite) {
-      print(glue("Table {tbl_name} exists but forcing overwrite"))
-      RSQLite::dbExecute(conn, glue("DROP TABLE  if exists  {tbl_name}"))
+      print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
+      RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
     }
-    else { print(glue("Table {tbl_name} does not exist -> creating it")) }
+    else { print(glue::glue("Table {tbl_name} does not exist -> creating it")) }
 
     # Write to DB
     results <-  sf::st_write(obj = df,
@@ -95,10 +97,10 @@ write_table.data.frame <- function(df,
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
     if(overwrite) {
-      print(glue("Table {tbl_name} exists but forcing overwrite"))
-      RSQLite::dbExecute(conn, glue("DROP TABLE  if exists  {tbl_name}"))
+      print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
+      RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
     }
-    else print(glue("Table {tbl_name} does not exist -> creating it"))
+    else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
 
     # Write to DB
     results <-  RSQLite::dbWriteTable(conn=conn,name=tbl_name, value=df)
@@ -128,7 +130,7 @@ list_tables_db <- function(conn){
   tryCatch({
     existing_tables <- RSQLite::dbListTables(conn)
   },error=function(e){
-    print(glue("Db {db_name} does not exist -> creating it along with table"))
+    print(glue::glue("Db {db_name} does not exist -> creating it along with table"))
     existing_tables <- list()
     return(existing_tables)
   })
@@ -171,12 +173,13 @@ append_new_records.sf <- function(df,
                                   tbl_name,
                                   key ){
 
+
   # Make sure table really exists
   existing_tables <- RSQLite::dbListTables(conn)
   assertthat::assert_that(length(existing_tables) > 0 ,
                           msg = 'Fatal error! Table does not exist')
 
-  print(glue('Table {tbl_name} exists: appending '))
+  print(glue::glue('Table {tbl_name} exists: appending '))
 
   # Check for existing records and try to avoid deduping
 
@@ -205,7 +208,7 @@ append_new_records.sf <- function(df,
   sql_on_clause <- paste0( left, '=', right  , collapse = ' AND ')
 
   ## Get new records in tmp with no matching record in {tbl_name}
-  sql_anti_join_clause <- glue("
+  sql_anti_join_clause <- glue::glue("
       SELECT *
       FROM tmp as t_left
       LEFT JOIN {tbl_name} as t_right
@@ -221,7 +224,7 @@ append_new_records.sf <- function(df,
   shp_append <- df %>% dplyr::inner_join(df_to_add, on= key_for_merge)
 
   if(new_records > 0){
-    print(glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
+    print(glue::glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
     sf::st_write(obj=shp_append %>% select(colnames(df)),
                  dsn=db_name,
                  layer=tbl_name,
@@ -229,7 +232,7 @@ append_new_records.sf <- function(df,
                  delete_dsn  = F,
                  driver = 'SQLite')
   }else{
-    print(glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
+    print(glue::glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
   }
 
   # Drop tmp table
@@ -257,7 +260,7 @@ append_new_records.data.frame <- function(df,
   assertthat::assert_that(length(existing_tables) > 0 ,
                           msg = 'Fatal error! Table does not exist')
 
-  print(glue('Table {tbl_name} exists: appending '))
+  print(glue::glue('Table {tbl_name} exists: appending '))
 
   # Check for existing records and try to avoid deduping
 
@@ -281,7 +284,7 @@ append_new_records.data.frame <- function(df,
   sql_on_clause <- paste0( left, '=', right  , collapse = ' AND ')
 
   ## Get new records in tmp with no matching record in {tbl_name}
-  sql_anti_join_clause <- glue("
+  sql_anti_join_clause <- glue::glue("
       SELECT *
       FROM tmp as t_left
       LEFT JOIN {tbl_name} as t_right
@@ -294,10 +297,10 @@ append_new_records.data.frame <- function(df,
   new_records <- nrow(df_to_add)
 
   if(new_records > 0){
-    print(glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
+    print(glue::glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
     RSQLite::dbAppendTable(conn, tbl_name, df)
   }else{
-    print(glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
+    print(glue::glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
   }
 
   # Drop tmp table
