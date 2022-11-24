@@ -3,8 +3,6 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
-    paths-ignore:
-    - '.github/**'
 
 
 name: test-coverage

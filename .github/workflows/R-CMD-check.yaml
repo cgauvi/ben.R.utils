@@ -1,8 +1,6 @@
 on:
   pull_request:
-    branches: [master, main, devl]
-    paths-ignore:
-    - '.github/**'
+    branches: [master, main]
   push:
     branches: [master, main]
 
