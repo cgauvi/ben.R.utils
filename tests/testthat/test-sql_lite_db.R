@@ -10,12 +10,22 @@ test_that("DB creation works for df", {
   # Create the cache dir
   if(!dir.exists( here::here('inst','extdata'))) dir.create( here::here('inst','extdata'),recursive = T)
 
+  # Remove DB
+  if(file.exists( here::here('inst','extdata', 'iris_test.db'))) unlink( here::here('inst','extdata', 'iris_test.db'))
+
   write_table  (df = iris,
                 tbl_name = 'iris_test_tbl',
                 key = NULL,
                 db_name = here::here('inst','extdata', 'iris_test.db'),
                 overwrite= T)
 
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
+                             dbname  = here::here('inst','extdata', 'iris_test.db')
+  )
+
+  n_before <- get_df_tbl(here::here('inst','extdata', 'iris_test.db'), 'iris_test_tbl') %>% dplyr::count()  %>% dplyr::pull(n)
+
+  expect_equal(n_before, nrow(iris))
 })
 
 
@@ -35,7 +45,7 @@ test_that("Appending existing records works (no duplicates) with df",{
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'iris_test.db'), 'iris_test_tbl') %>% dplyr::count()  %>% dplyr::pull(n)
 
-  assertthat::are_equal(n_before, n_after)
+  expect_equal(n_before, n_after)
 
 })
 
@@ -43,6 +53,9 @@ test_that("Appending existing records works (no duplicates) with df",{
 
 
 test_that( "DB creation works for sf objects", {
+
+  # Remove DB
+  if(file.exists(here::here('inst','extdata', 'nc_test.db'))) unlink(here::here('inst','extdata', 'nc_test.db') )
 
   shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
 
@@ -55,7 +68,7 @@ test_that( "DB creation works for sf objects", {
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>% dplyr::pull(n)
 
-  assertthat::are_equal(as.integer(n_after), nrow(shp_nc))
+  expect_equal(as.integer(n_after), nrow(shp_nc))
 
   }
 
@@ -81,7 +94,7 @@ test_that("Appending existing records works (no duplicates) with sf",{
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>% dplyr::pull(n)
 
-  assertthat::are_equal(n_before, n_after)
+  expect_equal(n_before, n_after)
 
 })
 
@@ -113,7 +126,7 @@ test_that("Appending new records with sf",{
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
 
-  assertthat::are_equal(n_before+num_new, n_after)
+  expect_equal(n_before+num_new, n_after)
 
 })
 

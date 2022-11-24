@@ -15,13 +15,13 @@ test_that("Caching new sf object works", {
   )
 
   # Cached
-  assertthat::assert_that(file.exists(here::here('cache','nc.geojson')))
+  expect_true(file.exists(here::here('cache','nc.geojson')))
 
   # Same
   shp_cached <- sf::st_read(here::here('cache','nc.geojson'))
 
-  assertthat::assert_that(all(dim(shp_nc) == dim(shp_cached)))
-  assertthat::assert_that(all(colnames(shp_nc) == colnames(shp_cached)))
+  expect_true(all(dim(shp_nc) == dim(shp_cached)))
+  expect_true(all(colnames(shp_nc) == colnames(shp_cached)))
 
 })
 
@@ -40,13 +40,13 @@ test_that("Reading already cached object works", {
   )
 
   # Cached
-  assertthat::assert_that(file.exists(here::here('cache','nc.geojson')))
+  expect_true(file.exists(here::here('cache','nc.geojson')))
 
   # Same
   shp_cached <- sf::st_read(here::here('cache','nc.geojson'))
 
-  assertthat::assert_that(all(dim(shp_nc) == dim(shp_cached)))
-  assertthat::assert_that(all(colnames(shp_nc) == colnames(shp_cached)))
+  expect_true(all(dim(shp_nc) == dim(shp_cached)))
+  expect_true(all(colnames(shp_nc) == colnames(shp_cached)))
 
 })
 
@@ -69,13 +69,13 @@ test_that("Caching csv object works", {
   )
 
   # Cached
-  assertthat::assert_that(file.exists(here::here("cache","aliments.csv")))
+  expect_true(file.exists(here::here("cache","aliments.csv")))
 
   # Same
   df_aliments_cached <- readr::read_csv(here::here("cache","aliments.csv"))
 
-  assertthat::assert_that(all(dim(df_aliments) == dim(df_aliments_cached)))
-  assertthat::assert_that(all(colnames(df_aliments) == colnames(df_aliments_cached)))
+  expect_true(all(dim(df_aliments) == dim(df_aliments_cached)))
+  expect_true(all(colnames(df_aliments) == colnames(df_aliments_cached)))
 
 })
 
@@ -99,13 +99,13 @@ test_that("Caching parquet object works", {
   )
 
   # Cached
-  assertthat::assert_that(file.exists(here::here('cache','aliments.parquet')))
+  expect_true(file.exists(here::here('cache','aliments.parquet')))
 
   # Same
   df_aliments_cached <- arrow::read_parquet(here::here('cache','aliments.parquet'))
 
-  assertthat::assert_that(all(dim(df_aliments) == dim(df_aliments_cached)))
-  assertthat::assert_that(all(colnames(df_aliments) == colnames(df_aliments_cached)))
+  expect_true(all(dim(df_aliments) == dim(df_aliments_cached)))
+  expect_true(all(colnames(df_aliments) == colnames(df_aliments_cached)))
 
 })
 
