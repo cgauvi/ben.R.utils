@@ -70,6 +70,39 @@ test_that("Appending existing records works (no duplicates) with df",{
 })
 
 
+#
+# sf::st_write(obj=shp_nc ,
+#              dsn=here::here('inst','extdata', 'nc_test.db'),
+#              layer='bla',
+#              append=T,
+#              delete_dsn  = T,
+#              driver = 'SQLite')
+#
+# sf::st_write(obj=shp_nc %>% head(2) ,
+#              dsn=here::here('inst','extdata', 'nc_test.db'),
+#              layer='bla',
+#              append=T,
+#              delete_dsn  = F,
+#              layer_options = "APPEND_SUBDATASET=YES",
+#              driver = 'SQLite')
+#
+# sf::st_write(obj=shp_nc %>% head(2) ,
+#              dsn=here::here('inst','extdata', 'nc_test.db'),
+#              layer='blo',
+#              append=T,
+#              delete_dsn  = F,
+#              #layer_options = "APPEND_SUBDATASET=YES",
+#              driver = 'SQLite')
+#
+#
+# write_table.data.frame(iris %>% tail(2),
+#                        db_name = here::here('inst','extdata', 'nc_test.db'),
+#                        tbl_name = 'iris_test_tbl',
+#                        key=NULL)
+#
+# dbListTables(RSQLite::dbConnect(RSQLite::SQLite(), dbname  = here::here('inst','extdata', 'nc_test.db') ))
+# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'bla')
+# get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'blo')
 
 
 test_that( "DB creation works for sf objects", {
@@ -83,7 +116,7 @@ test_that( "DB creation works for sf objects", {
                 tbl_name = 'nc_tbl',
                 key = 'ogc_fid',
                 db_name = here::here('inst','extdata', 'nc_test.db'),
-                overwrite= T)
+                overwrite = T)
 
 
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>% dplyr::pull(n)
@@ -154,3 +187,54 @@ test_that("Appending new records with sf",{
 
 })
 
+
+
+
+test_that("Adding new sf table with - existing db",{
+
+  shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),
+                             dbname  = here::here('inst','extdata', 'nc_test.db')
+  )
+
+  n_before <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count() %>%  dplyr::pull(n)
+
+  # Random values to numerical columns
+  shp_nc_rnd <- shp_nc %>%
+    dplyr::mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100)))
+
+  num_new <- 10
+
+  write_table(shp_nc_rnd %>% head(num_new),
+              tbl_name = 'nc_tbl_2',
+              key = 'ogc_fid',
+              db_name = here::here('inst','extdata', 'nc_test.db'),
+              overwrite= F)
+
+  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
+
+  expect_equal(n_before+num_new, n_after)
+
+  RSQLite::dbDisconnect(conn)
+
+})
+
+
+
+test_that("Add new data.frame to existing db",{
+
+  n_before <- nrow(iris)
+
+  write_table(iris,
+              tbl_name = 'iris',
+              db_name = here::here('inst','extdata', 'nc_test.db'),
+              overwrite= T)
+
+  n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'iris') %>% dplyr::count()  %>%  dplyr::pull(n)
+
+  expect_equal(n_before, n_after)
+
+
+
+})

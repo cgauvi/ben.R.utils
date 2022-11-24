@@ -53,7 +53,6 @@ write_table.sf <- function(df,
                            key = NULL,
                            overwrite = F) {
 
-
   if(is.null(key)) key <- sf::st_drop_geometry(df) %>% colnames() # don't use the geometry
 
   # Connect to DB
@@ -62,20 +61,24 @@ write_table.sf <- function(df,
   # Check if Db and table exists
   existing_tables <- list_tables_db(conn)
 
+  # Disconnnect - IMPORTANT TO DISCONNECT - OTHERWISE will get errors with st_write
+  DBI::dbDisconnect(conn)
 
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
-    if(overwrite) {
-      print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
-      RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
-    }
-    else { print(glue::glue("Table {tbl_name} does not exist -> creating it")) }
+    if (overwrite) sf::st_delete(dsn = db_name,
+                                 layer = tbl_name,
+                                 driver = 'SQLite')
+
+    if (overwrite && (tbl_name %in% existing_tables) ) print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
+    else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
 
     # Write to DB
     results <-  sf::st_write(obj = df,
                              dsn = db_name,
                              layer = tbl_name,
-                             delete_dsn  = T,   # important to delete the entire thing avoid any fuck-up
+                             append = T,
+                             delete_dsn  = length(existing_tables) == 0,   # T will delete the entire db ONLY if there are no tables -- can be the case since RSQLite::dbConnect creates an empty file which breaks st_write
                              driver = 'SQLite')
 
     # DB and table exist and we do not want to overwrite
@@ -89,8 +92,7 @@ write_table.sf <- function(df,
                                   key)
   }
 
-  # Disconnnect
-  DBI::dbDisconnect(conn)
+
 
   return(results)
 
@@ -108,6 +110,7 @@ write_table.sf <- function(df,
 #'
 #' @return
 #' @export
+#' @export write_table.data.frame
 #'
 #' @examples
 write_table.data.frame <- function(df,
@@ -176,6 +179,8 @@ list_tables_db <- function(conn){
 #'
 #' @return number of records added
 #'
+#' @export
+#'
 #' @examples
 #' \dontrun{
 #' shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
@@ -195,6 +200,19 @@ append_new_records <- function(x,...){
 
 
 
+#' Append new sf records to an existing table in a sql lite db
+#'
+#' @param df
+#' @param conn
+#' @param db_name
+#' @param tbl_name
+#' @param key
+#'
+#' @return
+#' @export
+#' @export append_new_records.sf
+#'
+#' @examples
 append_new_records.sf <- function(df,
                                   conn,
                                   db_name,
@@ -251,23 +269,26 @@ append_new_records.sf <- function(df,
 
   shp_append <- df %>% dplyr::inner_join(df_to_add, on= key_for_merge)
 
+  # Drop tmp table
+  RSQLite::dbExecute(conn, 'DROP TABLE  if exists tmp')
+
+  # Disconnnect - IMPORTANT TO DO THIS BEFORE st_write
+  DBI::dbDisconnect(conn)
+
   if(new_records > 0){
+
     print(glue::glue('Appending {new_records} new rows to {tbl_name} -- duplicates removed based on keys: {key_str}'))
-    sf::st_write(obj=shp_append %>% select(colnames(df)),
-                 dsn=db_name,
-                 layer=tbl_name,
-                 append=T,
+    sf::st_write(obj = shp_append %>% select(colnames(df)),
+                 dsn = db_name,
+                 layer = tbl_name,
+                 append = T,
                  delete_dsn  = F,
                  driver = 'SQLite')
   }else{
     print(glue::glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
   }
 
-  # Drop tmp table
-  RSQLite::dbExecute(conn, 'DROP TABLE  if exists tmp')
 
-  # Disconnnect
-  DBI::dbDisconnect(conn)
 
 
   return(new_records)
@@ -277,6 +298,19 @@ append_new_records.sf <- function(df,
 
 
 
+#' Append new df records to an existing table in a sql lite db
+#'
+#' @param df
+#' @param conn
+#' @param db_name
+#' @param tbl_name
+#' @param key
+#'
+#' @return
+#' @export
+#' @export append_new_records.data.frame
+#'
+#' @examples
 append_new_records.data.frame <- function(df,
                                           conn,
                                           db_name,
@@ -354,7 +388,7 @@ append_new_records.data.frame <- function(df,
 #'
 #' @examples
 get_df_tbl <- function(x,...){
-  UseMethod('get_df_tbl_dispatch',x)
+  UseMethod('get_df_tbl',x)
 }
 
 
@@ -365,14 +399,13 @@ get_df_tbl <- function(x,...){
 #'
 #' @return
 #' @export
-#' @export get_df_tbl_dispatch.character
+#' @export get_df_tbl.character
 #'
 #' @examples
-get_df_tbl_dispatch.character <- function(db_name = here::here('inst','extdata', 'revue_technique.db'),
-                                          tbl_name= 'policies_2015-2019'){
+get_df_tbl.character <- function(db_name, tbl_name){
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_name)
-  return(get_df_tbl_dispatch.SQLiteConnection(conn, tbl_name))
+  return(get_df_tbl.SQLiteConnection(conn, tbl_name))
 
 }
 
@@ -384,14 +417,11 @@ get_df_tbl_dispatch.character <- function(db_name = here::here('inst','extdata',
 #'
 #' @return
 #' @export
-#' @export get_df_tbl_dispatch.SQLiteConnection
+#' @export get_df_tbl.SQLiteConnection
 #'
 #' @examples
-get_df_tbl_dispatch.SQLiteConnection <- function(conn,
-                                                 tbl_name= 'policies_2015-2019'){
-
-  dplyr::tbl(conn, tbl_name)
-
+get_df_tbl.SQLiteConnection <- function(conn, tbl_name){
+  return(dplyr::tbl(conn, tbl_name))
 }
 
 
