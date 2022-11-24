@@ -39,6 +39,7 @@ jobs:
 
       - name: Query dependencies
         run: |
+          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
           if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
@@ -93,30 +94,4 @@ jobs:
           _R_CHECK_CRAN_INCOMING_: false
         run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--no-multiarch"), error_on = "error", check_dir = "check")
         shell: Rscript {0}
-  R-CMD-check-version:
-    name: New version check
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Get latest pkgs list
-        run: |
-          curl \
-          -X GET -f -O \
-          -H "Authorization:token ${{ secrets.GH_PAT }}" \
-          -H "Accept: application/vnd.github.v3.raw" \
-          -L https://api.github.com/repos/LaCapitale/dsops-r-minicran/contents/.github/pkgs.csv
-      - name: Check if package version is greater than minicran
-        shell: Rscript --no-init-file {0}
-        run: |
-          pkg <- read.dcf("DESCRIPTION")[,"Package"][[1]]
-          new_v <- read.dcf("DESCRIPTION")[,"Version"][[1]]
-          cur_v <- read.csv("pkgs.csv", row.names = 1)[pkg,]
-          if (isTRUE(nchar(cur_v) > 0)) {
-           if (utils::compareVersion(cur_v, new_v) > -1) {
-            stop(pkg, " package build version ", new_v,
-                 " is not greater than the current miniCRAN version ", cur_v,
-                 ". Bump version in package DESCRIPTION file.")
-           }
-          } else {
-           message("No current version found, probably a new package.")
-          }
+
