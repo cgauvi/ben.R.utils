@@ -1,14 +1,11 @@
 on:
   push:
     branches: [master, main]
-    paths:
-    - 'tests/**'
   pull_request:
     branches: [master, main]
     paths-ignore:
     - '.github/**'
-  repository_dispatch:
-    types: [covr_trigger]
+
 
 name: test-coverage
 

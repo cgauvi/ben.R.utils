@@ -3,8 +3,8 @@ on:
     branches: [master, main, devl]
     paths-ignore:
     - '.github/**'
-  repository_dispatch:
-    types: [check_trigger]
+  push:
+    branches: [master, main]
 
 name: R-CMD-check
 
