@@ -11,7 +11,7 @@ test_that("DB creation works for df", {
   if(!dir.exists( here::here('inst','extdata'))) dir.create( here::here('inst','extdata'),recursive = T)
 
   # Remove DB
-  if(file.exists( here::here('inst','extdata', 'iris_test.db'))) unlink( here::here('inst','extdata', 'iris_test.db'))
+  if(file.exists(here::here('inst','extdata', 'iris_test.db'))) unlink( here::here('inst','extdata', 'iris_test.db'))
 
   write_table  (df = iris,
                 tbl_name = 'iris_test_tbl',
@@ -27,6 +27,24 @@ test_that("DB creation works for df", {
 
   expect_equal(n_before, nrow(iris))
 })
+
+
+
+
+test_that("DB existence works", {
+
+  db_name <- here::here("inst","extdata", "iris_test.db")
+  tbl <- "iris_test_tbl"
+  expect_true(tbl_exists(db_name, tbl))
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname = db_name)
+  expect_true(tbl_exists(conn, tbl))
+
+  expect_false(tbl_exists(db_name, 'smemadeuptblthatdoesnotexist'))
+
+  RSQLite::dbDisconnect(conn)
+}
+)
 
 
 test_that("Appending existing records works (no duplicates) with df",{
@@ -46,6 +64,8 @@ test_that("Appending existing records works (no duplicates) with df",{
   n_after <- get_df_tbl(here::here('inst','extdata', 'iris_test.db'), 'iris_test_tbl') %>% dplyr::count()  %>% dplyr::pull(n)
 
   expect_equal(n_before, n_after)
+
+  RSQLite::dbDisconnect(conn)
 
 })
 
@@ -96,6 +116,8 @@ test_that("Appending existing records works (no duplicates) with sf",{
 
   expect_equal(n_before, n_after)
 
+  RSQLite::dbDisconnect(conn)
+
 })
 
 
@@ -127,6 +149,8 @@ test_that("Appending new records with sf",{
   n_after <- get_df_tbl(here::here('inst','extdata', 'nc_test.db'), 'nc_tbl') %>% dplyr::count()  %>%  dplyr::pull(n)
 
   expect_equal(n_before+num_new, n_after)
+
+  RSQLite::dbDisconnect(conn)
 
 })
 

@@ -97,6 +97,7 @@ write_table.sf <- function(df,
 }
 
 
+
 #' write_table for data.frame object
 #'
 #' @param df
@@ -124,10 +125,9 @@ write_table.data.frame <- function(df,
 
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
-    if(overwrite) {
-      print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
-      RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
-    }
+    if(overwrite) RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
+
+    if (overwrite && (tbl_name %in% existing_tables) ) print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
     else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
 
     # Write to DB
@@ -358,22 +358,87 @@ get_df_tbl <- function(x,...){
 }
 
 
+#' Return a df using a db name
+#'
+#' @param db_name
+#' @param tbl_name
+#'
+#' @return
+#' @export
+#' @export get_df_tbl_dispatch.character
+#'
+#' @examples
 get_df_tbl_dispatch.character <- function(db_name = here::here('inst','extdata', 'revue_technique.db'),
                                           tbl_name= 'policies_2015-2019'){
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_name)
-  dplyr::tbl(conn, tbl_name)
-
+  return(get_df_tbl_dispatch.SQLiteConnection(conn, tbl_name))
 
 }
 
 
+#' Return a df using a SQllite connection
+#'
+#' @param db_name
+#' @param tbl_name
+#'
+#' @return
+#' @export
+#' @export get_df_tbl_dispatch.SQLiteConnection
+#'
+#' @examples
 get_df_tbl_dispatch.SQLiteConnection <- function(conn,
                                                  tbl_name= 'policies_2015-2019'){
 
-
   dplyr::tbl(conn, tbl_name)
 
 }
 
+
+#' Determine if table exists in db
+#'
+#' @param x
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+tbl_exists<- function(x,...){
+  UseMethod('tbl_exists',x)
+}
+
+#' Determine if table exists in db (using db name)
+#'
+#' @param conn
+#' @param tbl
+#'
+#' @return T if table exists
+#' @export
+#' @export tbl_exists.character
+#'
+#' @examples
+tbl_exists.character <- function(db_name, tbl){
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), db_name)
+  return(tbl_exists.SQLiteConnection(conn,tbl))
+
+}
+
+
+#' Determine if table exists in db (using SQL lite connection)
+#'
+#' @param conn
+#' @param tbl
+#'
+#' @return T if table exists
+#' @export
+#' @export tbl_exists.SQLiteConnection
+#' @examples
+tbl_exists.SQLiteConnection <- function(conn, tbl){
+
+  existing_tables <- list_tables_db(conn)
+  return(any(tbl %in% existing_tables))
+
+}
 
