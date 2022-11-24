@@ -21,7 +21,8 @@ Imports:
     dbplyr,
     sf,
     readr,
-    assertthat
+    assertthat,
+    DBI
 Suggests: 
     lintr,
     testthat (>= 3.0.0)
