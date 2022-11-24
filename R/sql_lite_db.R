@@ -31,6 +31,19 @@ write_table <- function (df, ...) {
 }
 
 
+#' write_table for sf object
+#'
+#' @param df
+#' @param tbl_name
+#' @param db_name
+#' @param key
+#' @param overwrite
+#'
+#' @return
+#' @export write_table.sf
+#' @export
+#'
+#' @examples
 write_table.sf <- function(df,
                            tbl_name,
                            db_name,
@@ -81,6 +94,18 @@ write_table.sf <- function(df,
 }
 
 
+#' write_table for data.frame object
+#'
+#' @param df
+#' @param tbl_name
+#' @param db_name
+#' @param key
+#' @param overwrite
+#'
+#' @return
+#' @export
+#'
+#' @examples
 write_table.data.frame <- function(df,
                                    tbl_name,
                                    db_name,
