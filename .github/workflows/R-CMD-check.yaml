@@ -1,14 +1,20 @@
 on:
-  pull_request:
-    branches: [master, main]
   push:
-    branches: [master, main]
+    branches: [main, master, charles/linter]
+    paths:
+    - inst/extdata/ci_cd/**
+    - src/modeling/**
+  pull_request:
+    branches: [main, master, charles/linter]
+    paths:
+    - inst/extdata/ci_cd/**
+    - src/modeling/**
 
-name: R-CMD-check
+name: bechmarking_test
 
 jobs:
-  R-CMD-check:
-        runs-on: ${{ matrix.config.os }}
+  bechmarking_test:
+    runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -31,6 +37,7 @@ jobs:
         with:
           use-public-rspm: true
           r-version: ${{ matrix.config.r }}
+
 
       - name: Query dependencies
         run: |
@@ -61,6 +68,8 @@ jobs:
           install.packages('renv')
           # CRAN packages
           remotes::install_deps(dependencies = TRUE)
+          # Special catboost
+          devtools::install_github('catboost/catboost@v1.0.6', subdir = 'catboost/R-package')
         env:
           GITHUB_PAT: ${{ secrets.GH_PAT }}
         shell: Rscript {0}

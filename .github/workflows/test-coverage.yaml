@@ -58,12 +58,12 @@ jobs:
         uses: r-lib/actions/setup-pandoc@v2
 
 
-       - name: Install dependencies
-         run: |
+      - name: Install dependencies
+        run: |
               install.packages('renv')
               # CRAN packages
               remotes::install_deps(dependencies = TRUE)
-         shell: Rscript {0}
+        shell: Rscript {0}
 
       - name: Test coverage
         run: |
