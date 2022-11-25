@@ -495,8 +495,6 @@ tbl_exists.SQLiteConnection <- function(conn, tbl){
 #' @examples
 delete_tables <- function(db_name, list_tables){
 
-  browser()
-
   # Get tables before
   conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname = db_name)
   tables_before_deletion <- RSQLite::dbListTables(conn)
