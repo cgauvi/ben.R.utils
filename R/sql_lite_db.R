@@ -156,12 +156,22 @@ write_table.data.frame <- function(df,
 
 
 
+#' Safely list existing tables in db
+#'
+#' Will nt fail if DB does not exist, it will just return no tables
+#'
+#' @param conn
+#'
+#' @return
+#' @export
+#'
+#' @examples
 list_tables_db <- function(conn){
 
   tryCatch({
     existing_tables <- RSQLite::dbListTables(conn)
   },error=function(e){
-    print(glue::glue("Db {db_name} does not exist -> creating it along with table"))
+    print(glue::glue("Db {db_name} does not exist - a fortiori there are no tables"))
     existing_tables <- list()
     return(existing_tables)
   })
@@ -471,4 +481,58 @@ tbl_exists.SQLiteConnection <- function(conn, tbl){
   return(any(tbl %in% existing_tables))
 
 }
+
+
+
+#' Delete tables in a SQLite DB (works with all types of data - regular df or spatially indexed data)
+#'
+#' @param db_name
+#' @param list_tables
+#'
+#' @return list_deleted_tables
+#' @export
+#'
+#' @examples
+delete_tables <- function(db_name, list_tables){
+
+  browser()
+
+  # Get tables before
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname = db_name)
+  tables_before_deletion <- RSQLite::dbListTables(conn)
+
+
+  # Try deleting all tables if they exist
+  lapply(list_tables,
+         function(.x){
+                   if (!tbl_exists(db_name, .x)){
+                     print(glue::glue("Table {.x} does not exist: cannot delete"))
+                     } else{
+                       # Try both - spatial object requires  updating "geometry_columns" and potentially "spatial_ref_sys"
+                       sf::st_delete(db_name, .x, driver='SQLite')
+                       RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists {.x}"))
+                     }
+           }
+  )
+
+  RSQLite::dbDisconnect(conn)
+
+  # Get tables after
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname = db_name)
+  tables_after_deletion <- RSQLite::dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+
+  # Print message
+  successful_deletions <- setdiff(tables_before_deletion, tables_after_deletion)
+  list_tables_str <- paste0(successful_deletions, collapse = ", ")
+  print(glue::glue("Sucessfully deleted {length(successful_deletions)} tables:\n {list_tables_str} "))
+
+  if (length(successful_deletions) < length(list_tables) ){
+    print(glue::glue("Did not manage to delete all tables: {length(list_tables) - length(successful_deletions)} failed"))
+  }
+
+  return(successful_deletions)
+
+}
+
 

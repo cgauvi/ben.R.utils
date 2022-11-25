@@ -248,3 +248,45 @@ test_that("Add new data.frame to existing db",{
 
 
 })
+
+
+
+test_that("Deletion of tables",{
+
+  # Remove DB
+  if(file.exists(here::here('inst','extdata', 'nc_test.db'))) unlink(here::here('inst','extdata', 'nc_test.db') )
+
+  shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
+
+  # Write table to new DB
+  write_table  (df = shp_nc,
+                tbl_name = 'nc_tbl',
+                key = 'ogc_fid',
+                db_name = here::here('inst','extdata', 'nc_test.db'),
+                overwrite = T)
+
+  # Write another table (non spatial) to existing DB
+  write_table(iris,
+              tbl_name = 'iris',
+              db_name = here::here('inst','extdata', 'nc_test.db'),
+              overwrite= T)
+
+  tbls_to_delete <- c("iris", "nc_tbl")
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_before_deletion <- RSQLite::dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+  expect_true(all(tbls_to_delete %in% tables_before_deletion))
+
+  delete_tables(here::here('inst','extdata', 'nc_test.db'), tbls_to_delete)
+
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname  = here::here('inst','extdata', 'nc_test.db') )
+  tables_after_deletion <- RSQLite::dbListTables(conn)
+  RSQLite::dbDisconnect(conn)
+  expect_false(any(tbls_to_delete %in% tables_after_deletion))
+
+
+
+  expect_false(any())
+
+}
+)
