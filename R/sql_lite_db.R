@@ -491,6 +491,7 @@ tbl_exists.SQLiteConnection <- function(conn, tbl){
 #' @export
 #'
 #' @examples
+
 delete_tables <- function(conn, list_tables){
 
   # Get tables before
