@@ -61,19 +61,17 @@ write_table.sf <- function(df,
   # Check if Db and table exists
   existing_tables <- list_tables_db(conn)
 
-  # Disconnnect - IMPORTANT TO DISCONNECT - OTHERWISE will get errors with st_write
-  DBI::dbDisconnect(conn)
-
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
-    if (overwrite) sf::st_delete(dsn = db_name,
-                                 layer = tbl_name,
-                                 driver = 'SQLite')
+    if (overwrite)  RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
 
     if (overwrite && (tbl_name %in% existing_tables) ) print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
     else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
 
     # Write to DB
+    # Disconnnect - IMPORTANT TO DISCONNECT - OTHERWISE will get errors with st_write which opens a new connection
+    DBI::dbDisconnect(conn)
+
     results <-  sf::st_write(obj = df,
                              dsn = db_name,
                              layer = tbl_name,
@@ -486,39 +484,35 @@ tbl_exists.SQLiteConnection <- function(conn, tbl){
 
 #' Delete tables in a SQLite DB (works with all types of data - regular df or spatially indexed data)
 #'
-#' @param db_name
+#' @param conn (better to pass in a connection to an existing DB to avoid errors with unclosed connections)
 #' @param list_tables
 #'
 #' @return list_deleted_tables
 #' @export
 #'
 #' @examples
-delete_tables <- function(db_name, list_tables){
+
+delete_tables <- function(conn, list_tables){
 
   # Get tables before
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname = db_name)
   tables_before_deletion <- RSQLite::dbListTables(conn)
-
 
   # Try deleting all tables if they exist
   lapply(list_tables,
          function(.x){
-                   if (!tbl_exists(db_name, .x)){
-                     print(glue::glue("Table {.x} does not exist: cannot delete"))
-                     } else{
-                       # Try both - spatial object requires  updating "geometry_columns" and potentially "spatial_ref_sys"
-                       sf::st_delete(db_name, .x, driver='SQLite')
-                       RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists {.x}"))
-                     }
+                   tryCatch({
+                      # Try both - spatial object requires  updating "geometry_columns" and potentially "spatial_ref_sys"
+                      RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists {.x}"))
+                      delete_spatial_obj(conn, .x)
+                   },error=function(e){
+                      print(glue::glue("Error deleting table {.x} - {e}"))
+                  })
            }
   )
 
-  RSQLite::dbDisconnect(conn)
-
   # Get tables after
-  conn <- RSQLite::dbConnect(RSQLite::SQLite(),  dbname = db_name)
   tables_after_deletion <- RSQLite::dbListTables(conn)
-  RSQLite::dbDisconnect(conn)
+
 
   # Print message
   successful_deletions <- setdiff(tables_before_deletion, tables_after_deletion)
@@ -529,8 +523,69 @@ delete_tables <- function(db_name, list_tables){
     print(glue::glue("Did not manage to delete all tables: {length(list_tables) - length(successful_deletions)} failed"))
   }
 
+  # Disconnect
+  RSQLite::dbDisconnect(conn)
+
   return(successful_deletions)
 
 }
 
+
+#' Try to delete the auxiliary spatial data contained in a spatial lite db
+#'
+#' Can be important because we might get errors if we delete only
+#' a table with associated geometry without updating the geometry_columns table
+#'
+#' @param conn
+#' @param tbl_name
+#'
+#' @return
+#' @export
+#'
+#' @examples
+delete_spatial_obj <- function(conn, tbl_name){
+
+
+  del_records <- 0
+
+  # SQl lite sequence
+  if(RSQLite::dbExistsTable(conn, "sqlite_sequence")){
+    n_before <- get_df_tbl(conn, "sqlite_sequence") %>% dplyr::count() %>% pull(n)
+    query_del <- glue::glue(
+      "DELETE
+      FROM sqlite_sequence
+      WHERE name = '{tbl_name}' ;"
+    )
+    RSQLite::dbExecute(conn, query_del)
+
+    n_after <- get_df_tbl(conn, "sqlite_sequence") %>% dplyr::count() %>% pull(n)
+
+    if(n_after < n_before){
+      print(glue::glue("Removed {(n_before-n_after)} records from sqlite_sequence"))
+      del_records <- del_records + (n_before-n_after)
+    }
+
+  }
+
+  # Geometry column
+  if(RSQLite::dbExistsTable(conn, "geometry_columns")){
+    n_before <- get_df_tbl(conn, "geometry_columns") %>% dplyr::count() %>% pull(n)
+    query_del <- glue::glue(
+      "DELETE
+      FROM geometry_columns
+      WHERE f_table_name  = '{tbl_name}' ;"
+    )
+    RSQLite::dbExecute(conn, query_del)
+    n_after <- get_df_tbl(conn, "geometry_columns") %>% dplyr::count() %>% pull(n)
+
+    if(n_after < n_before){
+      print(glue::glue("Removed {(n_before-n_after)} records from geometry_columns"))
+      del_records <- del_records + (n_before-n_after)
+    }
+
+  }
+
+
+  return(del_records)
+}
 
