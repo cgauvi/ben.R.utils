@@ -63,10 +63,11 @@ write_table.sf <- function(df,
 
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
-    if (overwrite)  RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
 
     if (overwrite && (tbl_name %in% existing_tables) ) print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
     else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
+
+    if (overwrite) delete_tables(conn, tbl_name)
 
     # Write to DB
     # Disconnnect - IMPORTANT TO DISCONNECT - OTHERWISE will get errors with st_write which opens a new connection
@@ -511,7 +512,6 @@ delete_tables <- function(conn, list_tables){
 
   # Get tables after
   tables_after_deletion <- RSQLite::dbListTables(conn)
-
 
   # Print message
   successful_deletions <- setdiff(tables_before_deletion, tables_after_deletion)
