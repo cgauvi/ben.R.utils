@@ -63,10 +63,13 @@ write_table.sf <- function(df,
 
   # DB exists, table does not or we require overwriting
   if(!(tbl_name %in% existing_tables) || overwrite) {
-    if (overwrite)  RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists  {tbl_name}"))
 
     if (overwrite && (tbl_name %in% existing_tables) ) print(glue::glue("Table {tbl_name} exists but forcing overwrite"))
     else print(glue::glue("Table {tbl_name} does not exist -> creating it"))
+
+    # If the tbl is not present or we want to overwrite -> make 100% sure EVERYTHING is deleted
+    if (overwrite) delete_tables(RSQLite::dbConnect(RSQLite::SQLite(), db_name), tbl_name, verbose = F)
+    if (!(tbl_name %in% existing_tables)) delete_tables(RSQLite::dbConnect(RSQLite::SQLite(), db_name), tbl_name, verbose = F)
 
     # Write to DB
     # Disconnnect - IMPORTANT TO DISCONNECT - OTHERWISE will get errors with st_write which opens a new connection
@@ -486,13 +489,14 @@ tbl_exists.SQLiteConnection <- function(conn, tbl){
 #'
 #' @param conn (better to pass in a connection to an existing DB to avoid errors with unclosed connections)
 #' @param list_tables
+#' @param verbose
 #'
 #' @return list_deleted_tables
 #' @export
 #'
 #' @examples
 
-delete_tables <- function(conn, list_tables){
+delete_tables <- function(conn, list_tables, verbose = T){
 
   # Get tables before
   tables_before_deletion <- RSQLite::dbListTables(conn)
@@ -505,7 +509,7 @@ delete_tables <- function(conn, list_tables){
                       RSQLite::dbExecute(conn, glue::glue("DROP TABLE  if exists {.x}"))
                       delete_spatial_obj(conn, .x)
                    },error=function(e){
-                      print(glue::glue("Error deleting table {.x} - {e}"))
+                      if (verbose) print(glue::glue("Error deleting table {.x} - {e}"))
                   })
            }
   )
@@ -513,14 +517,13 @@ delete_tables <- function(conn, list_tables){
   # Get tables after
   tables_after_deletion <- RSQLite::dbListTables(conn)
 
-
   # Print message
   successful_deletions <- setdiff(tables_before_deletion, tables_after_deletion)
   list_tables_str <- paste0(successful_deletions, collapse = ", ")
-  print(glue::glue("Sucessfully deleted {length(successful_deletions)} tables:\n {list_tables_str} "))
+  if (verbose) print(glue::glue("Sucessfully deleted {length(successful_deletions)} tables:\n {list_tables_str} "))
 
   if (length(successful_deletions) < length(list_tables) ){
-    print(glue::glue("Did not manage to delete all tables: {length(list_tables) - length(successful_deletions)} failed"))
+    if (verbose) print(glue::glue("Did not manage to delete all tables: {length(list_tables) - length(successful_deletions)} failed"))
   }
 
   # Disconnect

@@ -7,7 +7,7 @@ Please include a summary of the change and what is changed by this PR. Please al
 
 
 * [ ] I have performed a self-review of my own code.
-* [ ] I have written unit tests to `tests`
+* [ ] I have written unit tests to `tests` and run devtools::test()
 * [ ] I have commented my code
 * [ ] I have updated the README + DESCRIPTION when appropriate
 * [ ] I have updated the documentation and run devtools::document() + checked exported functions are in NAMESPACE
