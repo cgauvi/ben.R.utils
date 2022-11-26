@@ -4,12 +4,12 @@
 \alias{delete_tables}
 \title{Delete tables in a SQLite DB (works with all types of data - regular df or spatially indexed data)}
 \usage{
-delete_tables(conn, list_tables)
+delete_tables(conn, list_tables, verbose = T)
 }
 \arguments{
 \item{conn}{(better to pass in a connection to an existing DB to avoid errors with unclosed connections)}
 
-\item{list_tables}{}
+\item{verbose}{}
 }
 \value{
 list_deleted_tables
