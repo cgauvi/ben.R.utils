@@ -10,3 +10,7 @@
 - Caching
 - Writing to a SQLite db
 - ...
+
+# Documentation
+
+See the [github pages](https://cgauvi.github.io/ben.R.utils/) for more details on usage.
