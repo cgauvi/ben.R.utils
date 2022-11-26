@@ -68,4 +68,15 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE)'
+          Rscript -e 'pkgdown::build_site()'
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update package documentation
+          title: 'Package documentation'
+          body: >
+            This PR is auto-generated. Make sure all
+            your changes are reflected in the docs/
+          labels: report, automated pr
