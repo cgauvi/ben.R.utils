@@ -3,12 +3,15 @@ on:
     types:
       - closed
     branches: [master, main]
+  push:
+    branches: [main, master]
 
 
 name: pkgdown
 
 jobs:
   pkgdown:
+    if: github.ref_name != "create-pull-request/patch"
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
