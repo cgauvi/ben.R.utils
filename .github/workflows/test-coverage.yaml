@@ -8,8 +8,8 @@ on:
 name: test-coverage
 
 jobs:
-  if: github.ref_name != "create-pull-request/patch"
   test-coverage:
+    if: ${{ github.ref_name != 'create-pull-request/patch' }}
     runs-on: ${{ matrix.config.os }}
 
 
