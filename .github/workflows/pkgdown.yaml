@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [master, main, charles/pkgdown]
+    branches: [master, main]
   pull_request:
     branches: [master, main]
 
