@@ -93,9 +93,6 @@ jobs:
               
             # Inspect reponse
             if [ $http_response != "200" ]; then
-                 printf '%s\n' "Couldnt manage to triger the documentation workflow" >&2 
-                 exit 1
-            else
                 cat response.txt >&2 
                 exit 1
             fi
