@@ -9,7 +9,7 @@ name: test-coverage
 
 jobs:
   test-coverage:
-    if: ${{ github.ref_name != 'create-pull-request/patch' }}
+    if:  github.ref_name != 'create-pull-request/patch' && github.actor != 'github-actions'
     runs-on: ${{ matrix.config.os }}
 
 
