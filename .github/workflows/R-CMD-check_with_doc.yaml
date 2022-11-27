@@ -81,7 +81,9 @@ jobs:
 
       - name: Trigger doc workflow
         run: |
-          echo ${{ secrets.GH_PAT }}
+          git config --local user.email "${GITHUB_ACTOR}@users.noreply.github.com" && \
+          git config --local user.name "${GITHUB_ACTOR}"
+          echo "${{ secrets.GH_PAT }}"
           if [[ -f "run_ok" ]]; then
             # Run curl -- https://stackoverflow.com/questions/38906626/curl-to-return-http-status-code-along-with-the-response
             http_response=$(curl -s -o response.txt -w "%{http_code}"  \
