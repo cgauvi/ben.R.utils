@@ -6,7 +6,7 @@ name: pkgdown
 
 jobs:
   pkgdown:
- 
+
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
