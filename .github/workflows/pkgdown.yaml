@@ -70,6 +70,12 @@ jobs:
           git config --local user.name "GitHub Actions"
           Rscript -e 'pkgdown::build_site()'
 
+      - name: Clean errors and artefacts
+        run: |
+          rm .github/depends.Rds
+          rm .github/R-version
+          rm docs/pull_request_template.html
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
@@ -78,5 +84,5 @@ jobs:
           title: 'Package documentation'
           body: >
             This PR is auto-generated. Make sure all
-            your changes are reflected in the docs/
-          labels: report, automated pr
+            your changes are reflected in `docs/`
+          labels: documentation, automated pr
