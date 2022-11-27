@@ -1,15 +1,12 @@
 on:
-  pull_request:
-    types:
-      - merged
-    branches: [master, main]
+  workflow-dispatch
 
 
 name: pkgdown
 
 jobs:
   pkgdown:
-    if:  github.ref_name != 'create-pull-request/patch' && github.actor != 'github-actions'
+ 
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
