@@ -80,7 +80,9 @@ write_table.sf <- function(df,
                              layer = tbl_name,
                              append = T,
                              delete_dsn  = length(existing_tables) == 0,   # T will delete the entire db ONLY if there are no tables -- can be the case since RSQLite::dbConnect creates an empty file which breaks st_write
-                             driver = 'SQLite')
+                             driver = 'SQLite',
+                             dataset_options=c("SPATIALITE=YES") #important! allows using st_area and st_distance from within spatialite
+                             )
 
     # DB and table exist and we do not want to overwrite
   }else{
@@ -294,7 +296,8 @@ append_new_records.sf <- function(df,
                  layer = tbl_name,
                  append = T,
                  delete_dsn  = F,
-                 driver = 'SQLite')
+                 driver = 'SQLite',
+                 dataset_options=c("SPATIALITE=YES") )
   }else{
     print(glue::glue('No new records added -- all {nrow(df)} already exist -- duplicates identified based on keys: {key_str}'))
   }
