@@ -40,7 +40,7 @@ jobs:
               
             # Inspect reponse
             if [ $http_response != "200" ]; then
-                echo ${{ secrets.GH_PAT }}
+                echo $GITHUB_PAT
                 cat response.txt >&2 
                 exit 1
             fi

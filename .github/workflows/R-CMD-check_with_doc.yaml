@@ -1,8 +1,8 @@
 on:
   push:
     branches: 
-    [bla]
-    #[main, master]
+      [bla]
+      #[main, master]
 
 name: R-CMD-check-with_docs
 
