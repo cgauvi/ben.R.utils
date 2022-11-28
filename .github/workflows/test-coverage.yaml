@@ -1,8 +1,12 @@
 on:
   push:
-    branches: [master, main]
+    branches: 
+    [bla]
+    #[main, master]
   pull_request:
-    branches: [master, main]
+    branches: 
+    [bla]
+    #[master, main]
 
 
 name: test-coverage
