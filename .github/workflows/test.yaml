@@ -26,7 +26,6 @@ jobs:
     steps:
       - name: Trigger doc workflow
         run: |
-          echo "$GITHUB_PAT"
           touch run_ok
           if [[ -f "run_ok" ]]; then
             # Run curl -- https://stackoverflow.com/questions/38906626/curl-to-return-http-status-code-along-with-the-response
@@ -39,10 +38,9 @@ jobs:
               )
               
             # Inspect reponse
-            if [ $http_response != "200" ]; then
-                echo $GITHUB_PAT
+            if [ $http_response != "204" ]; then
+                echo "Error with http response"
                 cat response.txt >&2 
-                exit 1
             fi
             # Remove tmp file that exists
             rm run_ok
