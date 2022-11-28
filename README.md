@@ -1,6 +1,6 @@
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/cgauvi/ben.R.utils/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/cgauvi/ben.R.utils/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check (and auto pkgdown)](https://github.com/cgauvi/ben.R.utils/actions/workflows/R-CMD-check_with_doc.yaml/badge.svg)](https://github.com/cgauvi/ben.R.utils/actions/workflows/R-CMD-check_with_doc.yaml)
 [![test-coverage](https://github.com/cgauvi/ben.R.utils/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/cgauvi/ben.R.utils/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
