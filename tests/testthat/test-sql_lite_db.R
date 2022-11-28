@@ -56,7 +56,7 @@ test_that("Appending existing records works (no duplicates) with df",{
 
   conn <- RSQLite::dbConnect(RSQLite::SQLite(),
                              dbname  = here::here('inst','extdata', 'iris_test.db')
-                             )
+  )
 
   n_before <- get_df_tbl(here::here('inst','extdata', 'iris_test.db'), 'iris_test_tbl') %>% dplyr::count()  %>% dplyr::pull(n)
 
@@ -95,7 +95,7 @@ test_that( "DB creation works for sf objects", {
 
   expect_equal(as.integer(n_after), nrow(shp_nc))
 
-  }
+}
 
 )
 
@@ -295,8 +295,98 @@ test_that("Deletion of tables",{
                info=paste0(paste0(tbls_to_delete, collapse = ','),
                            " vs ",
                            paste0(tables_after_deletion, collapse = ',')
-                           ))
+               ))
 
 
 }
 )
+
+
+test_that( "Spatial lite function are all available - area", {
+
+  # Remove DB
+  db_name <- here::here('inst','extdata', 'nc_test.db')
+
+  if(file.exists(db_name)) unlink(db_name)
+
+  shp_nc <- sf::st_read(system.file("shape/nc.shp", package="sf"))
+
+  # Write table to new DB
+  tbl_name <- 'nc_tbl'
+  write_table  (df = shp_nc,
+                tbl_name = tbl_name ,
+                key = 'FIPS',
+                db_name = db_name,
+                overwrite = T)
+
+
+  df_area <- sf::st_read(
+    dsn = db_name,
+    query = glue::glue("SELECT st_area(GEOMETRY) as area FROM '{tbl_name}' ")
+  )
+
+
+  # Computing area works
+  expect_true(!any(is.na(df_area$area)))
+
+
+  # Append new records
+  conn <- RSQLite::dbConnect(RSQLite::SQLite(), dbname = db_name)
+  append_new_records(shp_nc %>%   dplyr::mutate(across(where(is.numeric),  ~ rnorm(length(.),mean = 100))) %>%  tail(2),
+                     conn,
+                     db_name =  here::here('inst','extdata', 'nc_test.db') ,
+                     tbl_name = tbl_name,
+                     key=NULL) # use all columns + ignore geometry
+
+  df_area_2 <- sf::st_read(
+    dsn = db_name,
+    query = glue::glue("SELECT st_area(GEOMETRY) as area FROM '{tbl_name}' ")
+  )
+
+  # Computing area works
+  expect_true(!any(is.na(df_area_2$area)))
+
+
+
+}
+
+
+)
+
+
+
+test_that( "Spatial lite function are all available - distance", {
+
+  # Remove DB
+  db_name <- here::here('inst','extdata', 'meuse.db')
+
+  if(file.exists(db_name)) unlink(db_name)
+
+  shp_meuse <- sf::st_read(system.file("sqlite/meuse.sqlite", package = "sf"))
+
+  # Write table to new DB
+  tbl_name <- 'meuse_tbl'
+  write_table  (df = shp_meuse,
+                tbl_name = tbl_name ,
+                key = 'FIPS',
+                db_name = db_name,
+                overwrite = T)
+
+
+  # Compute distance from point
+  df_dist <- meuse_no_na <- sf::st_read(
+    dsn=db_name,
+    query = glue::glue("SELECT ST_DISTANCE(ST_GeomFromText('POINT (181072 333611)', 28992), GEOMETRY) as dist FROM '{tbl_name}'")
+  )
+
+
+  # Computing distance works
+  expect_true(!any(is.na(df_dist$dist)))
+
+}
+
+
+)
+
+
+
