@@ -6,7 +6,7 @@ on:
     branches: 
       [main, master]
 
-name: R-CMD-check-with_docs
+name: R-CMD-check
 
 jobs:
   R-CMD-check:
@@ -83,7 +83,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Trigger doc workflow
-        if: github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         run: |
           touch run_ok
           if [[ -f "run_ok" ]]; then
