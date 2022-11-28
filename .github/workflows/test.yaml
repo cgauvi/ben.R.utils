@@ -2,10 +2,10 @@ on:
   push:
     branches: [main, master]
 
-name: R-CMD-check-with_docs
+name: test
 
 jobs:
-  R-CMD-check:
+  test:
     if:  github.ref_name != 'create-pull-request/patch' && github.actor != 'github-actions'
     runs-on: ${{ matrix.config.os }}
 
@@ -27,8 +27,8 @@ jobs:
     steps:
       - name: Trigger doc workflow
         run: |
-          git config --local user.email "$GIT_HUB_ACTOR@users.noreply.github.com" && \
-          git config --local user.name "$GIT_HUB_ACTOR"
+          git config user.email "$GIT_HUB_ACTOR@users.noreply.github.com" && \
+          git config user.name "$GIT_HUB_ACTOR"
           echo "$GITHUB_PAT"
           touch run_ok
           if [[ -f "run_ok" ]]; then
