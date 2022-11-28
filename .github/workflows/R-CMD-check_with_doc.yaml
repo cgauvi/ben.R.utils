@@ -1,23 +1,23 @@
 on:
   pull_request:
-    branches: 
+    branches:
       [main, master]
   push:
-    branches: 
+    branches:
       [main, master]
 
 name: R-CMD-check
 
 jobs:
   R-CMD-check:
-    if:  github.ref_name != 'create-pull-request/patch' || github.actor != 'github-actions'
-    
+    if: !contains(github.ref_name, 'create-pull-request/patch') && github.actor != 'github-actions'
+
     strategy:
       fail-fast: false
       matrix:
         config:
           - {os: ubuntu-22.04, r: 'release', renv: '~/.local/share/renv'}
-          
+
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
@@ -95,17 +95,17 @@ jobs:
               https://api.github.com/repos/cgauvi/ben.R.utils/actions/workflows/41536288/dispatches \
               -d '{"ref":"master"}'
               )
-              
+
             # Inspect reponse
             if [ $http_response != "204" ]; then
                 echo "Error with http response"
-                cat response.txt >&2 
+                cat response.txt >&2
                 exit 1
             fi
             # Remove tmp file that exists
             rm run_ok
           else
-            printf '%s\n' "Couldnt manage to triger the documentation workflow" >&2 
+            printf '%s\n' "Couldnt manage to triger the documentation workflow" >&2
             exit 1
           fi
-          
+
